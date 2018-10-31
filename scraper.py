@@ -36,7 +36,6 @@ proxy = getProxyList()
 
 
 def AmzonParser(url):
-    try:
         product = []
         rank = []
         BSR_name = []
@@ -68,7 +67,7 @@ def AmzonParser(url):
         zipElement.send_keys(Keys.ENTER)
         time.sleep(1)
         chrome.find_element_by_name('glowDoneButton').click()
-        time.sleep(10)
+        time.sleep(1)
         # print(chrome.page_source)
         detail_soup = BeautifulSoup(chrome.page_source, "lxml")
 
@@ -89,7 +88,7 @@ def AmzonParser(url):
         nof_sellers = detail_soup.find('span', {'id': 'mbc-upd-olp-link'})
         product_nof_sellers = nof_sellers.text.strip()
         product_nof_sellers = product_nof_sellers.split()
-        print(product_nof_sellers[1])
+        # print(product_nof_sellers[1])
         product_nof_sellers = product_nof_sellers[1].replace(
             '(', '').replace(')', '')
         product.append(product_nof_sellers)
@@ -133,16 +132,10 @@ def AmzonParser(url):
 
         seller = detail_soup.find('div', {'id': 'merchant-info'})
         seller_info = seller.find('a').text.strip()
-        print(seller_info)
+        # print(seller_info)
         product.append(product_weight)
         product.append(seller_info)
         return product
-
-    except requests.exceptions.RequestException as e:
-        return AmzonParser(url)
-    except BaseException:
-        print("Unexpected error:", sys.exc_info()[0])
-        return AmzonParser(url)
 
 
 # generate random user agent ,otherwise amazon will block you by this!
@@ -184,13 +177,16 @@ def main():
             product = []
             product_id = sheet.cell(i, 0).value
             if isinstance(product_id, float):
-                product_id = int(product_id)
+                product_id = str(int(product_id))
             # print((product_id))
-            product_url = url_part1 + str(product_id) + url_part2
+
+            while(len(product_id)<13):
+            	product_id = '0'+product_id
+
+            product_url = url_part1 + product_id + url_part2
             # print(product_url)
             product = AmzonParser(product_url)
             print(product)
-            break
 
         break
     workbook.save("Output.xlsx")
