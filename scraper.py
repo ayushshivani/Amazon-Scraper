@@ -9,11 +9,15 @@ from random import choice
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-import pandas as pd
+import xlrd
+import xlwt
 import numpy
 
 
+workbook = xlwt.Workbook(encoding="ascii")
 # get proxy list from txt file
+
+
 def getProxyList():
     proxyList = []
     with open('./list.txt') as f:
@@ -33,6 +37,7 @@ proxy = getProxyList()
 
 def AmzonParser(url):
     try:
+        product = []
         rank = []
         BSR_name = []
         page = requests.get(
@@ -66,16 +71,29 @@ def AmzonParser(url):
         time.sleep(10)
         # print(chrome.page_source)
         detail_soup = BeautifulSoup(chrome.page_source, "lxml")
+
         # print(detail_soup)
         product_price = detail_soup.findAll(
             'span', {'id': 'price_inside_buybox'})
         price = product_price[0].text
+        product.append(price)
         # print(price)
 
-        prime_details = detail_soup.findAll(
-            'span', {'id': 'price-shipping-message'})
+        # prime_details = detail_soup.findAll(
+        #     'span', {'id': 'price-shipping-message'})
         # print(prime_details)
-        is_Prime = prime_details[0].find('i', {'class': 'a-icon a-icon-prime'})
+        # is_Prime = prime_details[0].find('i', {'class': 'a-icon a-icon-prime'})
+        product.append(0)
+        product.append(0)
+
+        nof_sellers = detail_soup.find('span', {'id': 'mbc-upd-olp-link'})
+        product_nof_sellers = nof_sellers.text.strip()
+        product_nof_sellers = product_nof_sellers.split()
+        print(product_nof_sellers[1])
+        product_nof_sellers = product_nof_sellers[1].replace(
+            '(', '').replace(')', '')
+        product.append(product_nof_sellers)
+        # print(product_nof_sellers)
 
         product_table = detail_soup.findAll(
             'table', {'id': 'productDetails_detailBullets_sections1'})
@@ -108,17 +126,17 @@ def AmzonParser(url):
 
         # print(rank)
         # print(BSR_name)
-
-        nof_sellers = detail_soup.find('span', {'id': 'mbc-upd-olp-link'})
-        product_nof_sellers = nof_sellers.text.strip()
-        product_nof_sellers = product_nof_sellers.split()
-        product_nof_sellers = product_nof_sellers[1].replace(
-            '(', '').replace(')', '')
-        # print(product_nof_sellers[1].replace('(','').replace(')',''))
+        product.append(rank[0])
+        product.append("BSR")  # name of BSR
+        product.append(rank[1])
+        product.append("BSR")  # name of BSR
 
         seller = detail_soup.find('div', {'id': 'merchant-info'})
         seller_info = seller.find('a').text.strip()
         print(seller_info)
+        product.append(product_weight)
+        product.append(seller_info)
+        return product
 
     except requests.exceptions.RequestException as e:
         return AmzonParser(url)
@@ -150,17 +168,32 @@ def main():
     url_part1 = "https://www.amazon.com/s?k="
     url_part2 = "&ref=nb_sb_noss"
     excel_file = 'Input.xlsx'
-    for sheetno in range(3):
-        sheet = pd.read_excel(excel_file, sheet_name=sheetno)
-        for index, row in sheet.iterrows():
-        	product_id = int(row[0])
 
-        	if len(product_id) < 
-        	product_url = url_part1 + str(product_id) + url_part2
-        	# print(product_url)
-        	AmzonParser(product_url)
-        	break
+    """Testing"""
+    # product_id = "978-0761168850"
+    # product_url = url_part1 + str(product_id) + url_part2
+    #     	# print(product_url)
+    # AmzonParser(product_url)
+
+    data = xlrd.open_workbook('Input.xlsx')
+    for sheetno in range(3):
+        sheet = data.sheet_by_index(sheetno)
+        worksheet = workbook.add_sheet('Mysheet')
+        # print(sheet.nrows)
+        for i in range(1, sheet.nrows):
+            product = []
+            product_id = sheet.cell(i, 0).value
+            if isinstance(product_id, float):
+                product_id = int(product_id)
+            # print((product_id))
+            product_url = url_part1 + str(product_id) + url_part2
+            # print(product_url)
+            product = AmzonParser(product_url)
+            print(product)
+            break
+
         break
+    workbook.save("Output.xlsx")
 
 
 main()
