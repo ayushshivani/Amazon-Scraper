@@ -251,13 +251,17 @@ def main():
             
             worksheet.write(i, 0, current_date)
             worksheet.write(i, 1, product_id)
-
-            for j in range(2, 12):
-                worksheet.write(i, j, product[j - 2])
-           
+            if len(product) != 0:
+            	for j in range(2, 12):
+                	worksheet.write(i, j, product[j - 2])
+            else:
+            	for j in range(2, 12):
+                	worksheet.write(i, j, "NA")
+            break
+        workbook.save("Output.xlsx")
         break
-    
     workbook.save("Output.xlsx")
+    
 
 
 main()
