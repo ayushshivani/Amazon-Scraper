@@ -167,21 +167,31 @@ def AmzonParser(url):
             # print(rank)
             # print(BSR_name)
             BSR1_temp = None
+            BSR2_temp = None
+            BSR1 = ""
+            BSR2 = ""
             # print(BSR_name[0],BSR_name[1])
 
-            for i in range(len(BSR_name[0])):
+            for i in range(len(BSR_name[1])):
             	for j in BSR_name[0][i]:
             		if j == "(":
             			BSR1_temp = i
             			break
             		if BSR1_temp is not None:
             			break
-            BSR1 = ""
 
             for i in range(0,BSR1_temp):
-            	BSR1 += BSR_name[0][i]
+            	BSR1 += BSR_name[1][i] + " "
 
-            print(BSR1)
+            for i in range(len(BSR_name[0])-1,0,-1):
+            	if BSR_name[0][i] == ">":
+            		BSR2_temp = i
+            		break
+
+            for i in range(BSR2_temp + 1,len(BSR_name[0])):
+            	BSR2 += BSR_name[0][i] + " "
+
+            # print(BSR2.strip())
 
             # for i in range(len(BSR_name)):
             # 	if BSR_name[i] == "-1":
@@ -195,9 +205,9 @@ def AmzonParser(url):
             # 	else:
             # 		BSR_name2 += BSR_name2 + BSR_name[i]
             product.append(rank[0])
-            product.append(BSR1)  # name of BSR
+            product.append(BSR1.strip())  # name of BSR
             product.append(rank[1])
-            product.append(BSR_name[1][0]+" "+BSR_name[1][1] + " " + BSR_name[1][2])  # name of BSR
+            product.append(BSR2.strip())  # name of BSR
 
             seller = detail_soup.find('div', {'id': 'merchant-info'})
             if seller is not None:
