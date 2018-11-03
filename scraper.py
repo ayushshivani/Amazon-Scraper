@@ -39,7 +39,7 @@ proxy = getProxyList()
 def AmzonParser(url):
     product = []
     rank = []
-    BSR_name = []
+    BSR_name = [[],[]]
     page = requests.get(
         url, headers=random_useragent(), proxies={
             "http": "{}".format(
@@ -102,10 +102,10 @@ def AmzonParser(url):
                     product.append(price)
                 product_shipping = detail_soup.find(
                     'div', {'id': 'desktop_qualifiedBuyBox'})
-                if len(product_shipping) != 0:
+                if product_shipping is not None:
                     product_shipping = product_shipping.find(
                         'span', {'class': 'a-size-base a-color-secondary'})
-                    if len(product_shipping) != 0:
+                    if product_shipping is not None:
                         product_shipping = product_shipping.text.strip()
                         product.append(product_shipping)
 
@@ -124,7 +124,7 @@ def AmzonParser(url):
             product_table = detail_soup.findAll(
                 'table', {'id': 'productDetails_detailBullets_sections1'})
             # print(product_table)
-            if product_table is not None:
+            if len(product_table) !=0:
                 rows = product_table[0].findAll('tr')
                 # print(rows)
                 for row in rows:
@@ -134,8 +134,11 @@ def AmzonParser(url):
                         # print(col_name.strip())
                         if col_name == 'Shipping Weight':
                             product_weight = row.find('td')
-                            if product_weight is not None:
-                                product_weight = product_weight.text.strip()
+                            
+                            if product_weight is not None :
+                            	print("213")
+                            	product_weight = product_weight.text.strip()
+                            	product_weight = int(product_weight[0])
                             else:
                                 product_weight = "Null"
 
@@ -144,26 +147,38 @@ def AmzonParser(url):
                             # print(product_BSR)
                             if product_BSR is not None:
                                 product_BSR_span = product_BSR.findAll('span')
-                                if product_BSR is not None:
-                                    for i in range(1):
-                                        for word in product_BSR_span[i].text.split(
-                                        ):
+                                if len(product_BSR) != 0:
+                                    for i in range(2):
+                                    	# BSR_name[i] = []
+                                    	for word in product_BSR_span[i].text.split():
                                             # print(word)
                                             if word[0] == '#':
                                                 rank.append(word)
                                             elif word == 'in':
                                                 pass
                                             else:
-                                                BSR_name.append(word)
-                        else:
-                            product_weight = "Null"
+                                                BSR_name[i].append(word)
+                                        
 
             # print(rank)
             # print(BSR_name)
+            
+            # print(BSR_name[0],BSR_name[1])
+            # for i in range(len(BSR_name)):
+            # 	if BSR_name[i] == "-1":
+            # 		z = i 
+            # 		break
+            # 	else:
+            # 		BSR_name1 += BSR_name1 + BSR_name[i]
+            # for i in range(z,len(BSR_name)):
+            # 	if BSR_name[i] == "-1":
+            # 		break
+            # 	else:
+            # 		BSR_name2 += BSR_name2 + BSR_name[i]
             product.append(rank[0])
-            product.append(BSR_name[0])  # name of BSR
+            product.append(BSR_name[0][0]+" "+BSR_name[0][1] + " " + BSR_name[0][2])  # name of BSR
             product.append(rank[1])
-            product.append(BSR_name[1])  # name of BSR
+            product.append(BSR_name[1][0]+" "+BSR_name[1][1] + " " + BSR_name[1][2])  # name of BSR
 
             seller = detail_soup.find('div', {'id': 'merchant-info'})
             if seller is not None:
@@ -174,7 +189,7 @@ def AmzonParser(url):
                     seller_info = "Null"
             else:
                 seller_info = "Null"
-            # print(seller_info)
+            # print(product_weight,seller_info)
             product.append(product_weight)
             product.append(seller_info)
 
@@ -239,7 +254,7 @@ def main():
 
             for j in range(2, 12):
                 worksheet.write(i, j, product[j - 2])
-            break
+           
         break
     
     workbook.save("Output.xlsx")
