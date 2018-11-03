@@ -39,7 +39,7 @@ proxy = getProxyList()
 def AmzonParser(url):
     product = []
     rank = []
-    BSR_name = [[],[]]
+    BSR_name = [[], []]
     page = requests.get(
         url, headers=random_useragent(), proxies={
             "http": "{}".format(
@@ -124,7 +124,7 @@ def AmzonParser(url):
             product_table = detail_soup.findAll(
                 'table', {'id': 'productDetails_detailBullets_sections1'})
             # print(product_table)
-            if len(product_table) !=0:
+            if len(product_table) != 0:
                 rows = product_table[0].findAll('tr')
                 # print(rows)
                 for row in rows:
@@ -134,11 +134,11 @@ def AmzonParser(url):
                         # print(col_name.strip())
                         if col_name == 'Shipping Weight':
                             product_weight = row.find('td')
-                            
-                            if product_weight is not None :
-                            	print("213")
-                            	product_weight = product_weight.text.strip()
-                            	product_weight = int(product_weight[0])
+
+                            if product_weight is not None:
+                                print("213")
+                                product_weight = product_weight.text.strip()
+                                product_weight = int(product_weight[0])
                             else:
                                 product_weight = "Null"
 
@@ -149,8 +149,9 @@ def AmzonParser(url):
                                 product_BSR_span = product_BSR.findAll('span')
                                 if len(product_BSR) != 0:
                                     for i in range(2):
-                                    	# BSR_name[i] = []
-                                    	for word in product_BSR_span[i].text.split():
+                                        # BSR_name[i] = []
+                                        for word in product_BSR_span[i].text.split(
+                                        ):
                                             # print(word)
                                             if word[0] == '#':
                                                 rank.append(word)
@@ -158,15 +159,14 @@ def AmzonParser(url):
                                                 pass
                                             else:
                                                 BSR_name[i].append(word)
-                                        
 
             # print(rank)
             # print(BSR_name)
-            
+
             # print(BSR_name[0],BSR_name[1])
             # for i in range(len(BSR_name)):
             # 	if BSR_name[i] == "-1":
-            # 		z = i 
+            # 		z = i
             # 		break
             # 	else:
             # 		BSR_name1 += BSR_name1 + BSR_name[i]
@@ -176,9 +176,19 @@ def AmzonParser(url):
             # 	else:
             # 		BSR_name2 += BSR_name2 + BSR_name[i]
             product.append(rank[0])
-            product.append(BSR_name[0][0]+" "+BSR_name[0][1] + " " + BSR_name[0][2])  # name of BSR
+            product.append(
+                BSR_name[0][0] +
+                " " +
+                BSR_name[0][1] +
+                " " +
+                BSR_name[0][2])  # name of BSR
             product.append(rank[1])
-            product.append(BSR_name[1][0]+" "+BSR_name[1][1] + " " + BSR_name[1][2])  # name of BSR
+            product.append(
+                BSR_name[1][0] +
+                " " +
+                BSR_name[1][1] +
+                " " +
+                BSR_name[1][2])  # name of BSR
 
             seller = detail_soup.find('div', {'id': 'merchant-info'})
             if seller is not None:
@@ -247,21 +257,21 @@ def main():
             product = AmzonParser(product_url)
             print(product, product_id)
             date = datetime.datetime.now()
-            current_date = str(date.month) + "/" + str(date.day) + "/" + str(date.year - 2000)
-            
+            current_date = str(date.month) + "/" + \
+                str(date.day) + "/" + str(date.year - 2000)
+
             worksheet.write(i, 0, current_date)
             worksheet.write(i, 1, product_id)
             if len(product) != 0:
-            	for j in range(2, 12):
-                	worksheet.write(i, j, product[j - 2])
+                for j in range(2, 12):
+                    worksheet.write(i, j, product[j - 2])
             else:
-            	for j in range(2, 12):
-                	worksheet.write(i, j, "NA")
+                for j in range(2, 12):
+                    worksheet.write(i, j, "NA")
             break
         workbook.save("Output.xlsx")
         break
     workbook.save("Output.xlsx")
-    
 
 
 main()

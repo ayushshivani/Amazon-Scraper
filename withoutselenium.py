@@ -16,6 +16,7 @@ import numpy
 
 
 workbook = xlwt.Workbook(encoding="ascii")
+
 # get proxy list from txt file
 
 
@@ -39,7 +40,8 @@ proxy = getProxyList()
 def AmzonParser(url):
     product = []
     rank = []
-    BSR_name = [[],[]]
+    BSR_name = [[], []]
+    product_weight = "NULL"
     page = requests.get(
         url, headers=random_useragent(), proxies={
             "http": "{}".format(
@@ -64,27 +66,23 @@ def AmzonParser(url):
             # chrome_options.add_argument('--proxy-server=%s' % PROXY)
 
             # chrome = webdriver.Chrome(executable_path='./chromedriver')
-            page = requests.get(result_url,headers = random_useragent(),proxies = {"http":"{}".format(choice(proxy))},timeout = 3)
+            page = requests.get(
+    result_url,
+    headers=random_useragent(),
+    proxies={
+        "http": "{}".format(
+            choice(proxy))},
+             timeout=3)
             page = page.text
-            # chrome.get(result_url)
-            # chrome.find_element_by_id("nav-global-location-slot").click()
-            # time.sleep(2)
-            # zipElement = chrome.find_element_by_id("GLUXZipUpdateInput")
-            # zipElement.send_keys('32818')
-            # time.sleep(1)
-            # zipElement.send_keys(Keys.ENTER)
-            # time.sleep(1)
-            # chrome.find_element_by_name('glowDoneButton').click()
-            # time.sleep(1)
-            # print(chrome.page_source)
+            
             detail_soup = BeautifulSoup(page, "lxml")
-            # chrome.quit()
+            
 
-            # print(detail_soup)
+            
             product_price = detail_soup.findAll(
                 'span', {'id': 'price_inside_buybox'})
 
-            # print(price)
+            
 
             prime_details = detail_soup.findAll('a', {'id': 'SSOFpopoverLink'})
             if len(prime_details) != 0:
@@ -118,29 +116,29 @@ def AmzonParser(url):
             if nof_sellers is not None:
                 product_nof_sellers = nof_sellers.text.strip()
                 product_nof_sellers = product_nof_sellers.split()
-                # print(product_nof_sellers[1])
+                
                 product_nof_sellers = product_nof_sellers[1].replace(
                     '(', '').replace(')', '')
                 product.append(product_nof_sellers)
             else:
                 product.append("NULL")
-            # print(product_nof_sellers)
+            
 
             product_table = detail_soup.findAll(
                 'table', {'id': 'productDetails_detailBullets_sections1'})
-            # print(product_table)
-            if len(product_table) !=0:
+            
+            if len(product_table) != 0:
                 rows = product_table[0].findAll('tr')
-                # print(rows)
+            
                 for row in rows:
                     col = row.find('th')
                     if col is not None:
                         col_name = col.text.strip()
-                        # print(col_name.strip())
+                        
                         if col_name == 'Shipping Weight':
                             product_weight = row.find('td')
-                            
-                            if product_weight is not None :
+
+                            if product_weight is not None:
                             	product_weight = product_weight.text.strip()
                             	product_weight = int(product_weight[0])
                             else:
@@ -148,29 +146,29 @@ def AmzonParser(url):
 
                         if col_name == 'Best Sellers Rank':
                             product_BSR = row.find('td')
-                            # print(product_BSR)
+                            
                             if product_BSR is not None:
                                 product_BSR_span = product_BSR.findAll('span')
                                 if len(product_BSR) != 0:
                                     for i in range(2):
-                                    	# BSR_name[i] = []
-                                    	for word in product_BSR_span[i].text.split():
-                                            # print(word)
+                                    	
+                                    	for word in product_BSR_span[i].text.split(
+                                    	):
+                                            
                                             if word[0] == '#':
                                                 rank.append(word)
                                             elif word == 'in':
                                                 pass
                                             else:
                                                 BSR_name[i].append(word)
-                                        
 
-            # print(rank)
-            # print(BSR_name)
+            
+            
             BSR1_temp = None
             BSR2_temp = None
             BSR1 = ""
             BSR2 = ""
-            # print(BSR_name[0],BSR_name[1])
+            
 
             for i in range(len(BSR_name[1])):
             	for j in BSR_name[0][i]:
@@ -180,45 +178,47 @@ def AmzonParser(url):
             		if BSR1_temp is not None:
             			break
 
-            for i in range(0,BSR1_temp):
-            	BSR1 += BSR_name[1][i] + " "
+            if BSR1_temp is not None:
+            	for i in range(0, BSR1_temp):
+            		BSR1 += BSR_name[1][i] + " "
 
-            for i in range(len(BSR_name[0])-1,0,-1):
+            for i in range(len(BSR_name[0]) - 1, 0, -1):
             	if BSR_name[0][i] == ">":
             		BSR2_temp = i
             		break
+            if BSR2_temp is not None:
+            	for i in range(BSR2_temp + 1, len(BSR_name[0])):
+            		BSR2 += BSR_name[0][i] + " "
 
-            for i in range(BSR2_temp + 1,len(BSR_name[0])):
-            	BSR2 += BSR_name[0][i] + " "
-
-            # print(BSR2.strip())
-
-            # for i in range(len(BSR_name)):
-            # 	if BSR_name[i] == "-1":
-            # 		z = i 
-            # 		break
-            # 	else:
-            # 		BSR_name1 += BSR_name1 + BSR_name[i]
-            # for i in range(z,len(BSR_name)):
-            # 	if BSR_name[i] == "-1":
-            # 		break
-            # 	else:
-            # 		BSR_name2 += BSR_name2 + BSR_name[i]
-            product.append(rank[0])
+            
             product.append(BSR1.strip())  # name of BSR
-            product.append(rank[1])
+            if len(rank) >= 1:
+            	product.append(rank[0])
+            else:
+           		product.append("Null")
             product.append(BSR2.strip())  # name of BSR
+            if len(rank) >= 2:
+            	product.append(rank[1])
+            else:
+           		product.append("Null")
 
             seller = detail_soup.find('div', {'id': 'merchant-info'})
+            
+            seller_info1 = ""
             if seller is not None:
                 seller_info = seller.find('a')
                 if seller_info is not None:
                     seller_info = seller_info.text.strip()
                 else:
-                    seller_info = "Null"
+                    seller_info = seller.text.strip()
+                    for i in seller_info.split():
+                    	if i not in ("sold", "Ships", "from", "by","and"):
+                    		seller_info1 += i
+                    seller_info = seller_info1
+
             else:
                 seller_info = "Null"
-            # print(product_weight,seller_info)
+            
             product.append(product_weight)
             product.append(seller_info)
 
@@ -256,23 +256,47 @@ def main():
     # AmzonParser(product_url)
 
     data = xlrd.open_workbook('Input.xlsx')
-    for sheetno in range(3):
+    for sheetno in range(2):
         sheet = data.sheet_by_index(sheetno)
-        worksheet = workbook.add_sheet('Mysheet')
-        # print(sheet.nrows)
+        worksheet = workbook.add_sheet(str(sheetno))
+        
+        worksheet.col(0).width = int(256 * 4.72 *7)
+        worksheet.write(0, 0, "Date")
+        worksheet.col(1).width =  int(256 * 4.72 *13)
+        worksheet.write(0, 1, "ASIN")
+        worksheet.col(2).width =  int(256 * 4.72 *8)
+        worksheet.write(0, 2, "Current Buy Box Price if Prime")
+        worksheet.col(3).width =  int(256 *4.72 *8)
+        worksheet.write(0, 3, "Current Buy Box Price if not Prime")
+        worksheet.col(4).width =  int(256 * 4.72 *8)
+        worksheet.write(0, 4, "Current Buy Box Shipping if not Prime")
+        worksheet.col(5).width =  int(256 * 4.72 *7)
+        worksheet.write(0, 5, "No of Seller")
+        worksheet.col(6).width =  int(256 * 4.72 *24)
+        worksheet.write(0, 6, "BSR Category")
+        worksheet.col(7).width =  int(256 * 4.72 *8)  
+        worksheet.write(0, 7, "BSR for Category 1")
+        worksheet.col(8).width =  int(256 * 4.72 *24)
+        worksheet.write(0, 8, "BSR category")
+        worksheet.col(9).width =  int(256 * 4.72 *24)
+        worksheet.write(0, 9, "BSR for Category 2")
+        worksheet.col(10).width = int(256 * 4.72 *7)
+        worksheet.write(0, 10, "Shipping Weight")
+        worksheet.col(11).width = int(256 * 4.72 *24)
+        worksheet.write(0, 11, "Buybox Seller")
         for i in range(1, sheet.nrows):
             product = []
             product_id = sheet.cell(i, 0).value
 
             if isinstance(product_id, float):
                 product_id = str(int(product_id))
-            # print((product_id))
+            
 
-            while(len(product_id) < 13):
+            while(len(product_id) < 13 and sheetno == 0):
                 product_id = '0' + product_id
 
             product_url = url_part1 + product_id + url_part2
-            # print(product_url)
+            
             product = AmzonParser(product_url)
             print(product, product_id)
             date = datetime.datetime.now()
@@ -289,6 +313,7 @@ def main():
             break
         workbook.save("Output.xlsx")
         break
+
     workbook.save("Output.xlsx")
     
 
